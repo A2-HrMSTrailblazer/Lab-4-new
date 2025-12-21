@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Scatter Plot with Trend Line</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Study Hours vs Programming Assignment Score</h2>
+
+    <svg width="600" height="400"></svg>
+
+    <script>
+      const data = [
+        { hours: 2, score: 55 },
+        { hours: 4, score: 60 },
+        { hours: 6, score: 68 },
+        { hours: 8, score: 72 },
+        { hours: 10, score: 78 },
+        { hours: 12, score: 82 },
+        { hours: 14, score: 88 },
+        { hours: 16, score: 90 },
+        { hours: 18, score: 93 },
+      ];
+
+      const svg = d3.select("svg");
+      const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+      const width = svg.attr("width") - margin.left - margin.right;
+      const height = svg.attr("height") - margin.top - margin.bottom;
+
+      const g = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      const xScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(data, (d) => d.hours)])
+        .range([0, width]);
+
+      const yScale = d3.scaleLinear().domain([50, 100]).range([height, 0]);
+
+      g.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale));
+
+      g.append("g").call(d3.axisLeft(yScale));
+
+      g.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => xScale(d.hours))
+        .attr("cy", (d) => yScale(d.score))
+        .attr("r", 5)
+        .attr("fill", "steelblue");
+
+      // Linear regression calculation
+      const xMean = d3.mean(data, (d) => d.hours);
+      const yMean = d3.mean(data, (d) => d.score);
+
+      const slope =
+        d3.sum(data, (d) => (d.hours - xMean) * (d.score - yMean)) /
+        d3.sum(data, (d) => Math.pow(d.hours - xMean, 2));
+
+      const intercept = yMean - slope * xMean;
+
+      const trendLine = [
+        { x: 0, y: intercept },
+        {
+          x: d3.max(data, (d) => d.hours),
+          y: slope * d3.max(data, (d) => d.hours) + intercept,
+        },
+      ];
+
+      const line = d3
+        .line()
+        .x((d) => xScale(d.x))
+        .y((d) => yScale(d.y));
+
+      g.append("path")
+        .datum(trendLine)
+        .attr("d", line)
+        .attr("stroke", "red")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+    </script>
+  </body>
+</html>
